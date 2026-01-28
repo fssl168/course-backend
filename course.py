@@ -329,73 +329,96 @@ def get_course(course_id):
 # 学生报名课程
 @course_bp.route('/api/courses/<course_id>/register', methods=['POST'])
 def register_course(course_id):
-    # 从Authorization头中获取token
-    token = request.headers.get('Authorization') or request.headers.get('authorization')
-    if not token:
-        return jsonify({'message': '缺少认证令牌'}), 401
-
-    # 移除Bearer前缀
-    if token.startswith('Bearer '):
-        token = token[7:]
-
     try:
-        # 解码token
-        data = jwt.decode(token, FLASK_CONFIG['SECRET_KEY'], algorithms=['HS256'])
-        user_id = data['user_id']
-    except jwt.ExpiredSignatureError:
-        return jsonify({'message': '认证令牌已过期'}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({'message': '无效的认证令牌'}), 401
+        # 从Authorization头中获取token
+        token = request.headers.get('Authorization') or request.headers.get('authorization')
+        print(f"获取到的Authorization头: {token}")
+        if not token:
+            return jsonify({'message': '缺少认证令牌'}), 401
+
+        # 移除Bearer前缀
+        if token.startswith('Bearer '):
+            token = token[7:]
+            print(f"移除Bearer前缀后的token: {token[:20]}...")
+
+        try:
+            # 解码token
+            data = jwt.decode(token, FLASK_CONFIG['SECRET_KEY'], algorithms=['HS256'])
+            user_id = data['user_id']
+            print(f"解码token成功，用户ID: {user_id}")
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': '认证令牌已过期'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message': '无效的认证令牌'}), 401
+        except Exception as e:
+            print(f"认证失败: {str(e)}")
+            return jsonify({'message': f'认证失败: {str(e)}'}), 500
+
+        conn = None
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # 检查课程是否存在
+            print(f"检查课程是否存在，课程ID: {course_id}")
+            c.execute('SELECT capacity, registered, registration_start, registration_end FROM courses WHERE id = %s',
+                      (course_id,))
+            course = c.fetchone()
+            print(f"查询到的课程信息: {course}")
+            if not course:
+                return jsonify({'message': '课程不存在'}), 404
+
+            # 检查是否在报名时间内
+            now = datetime.datetime.now()
+            print(f"当前时间: {now}")
+            print(f"报名开始时间: {course[2]}")
+            print(f"报名结束时间: {course[3]}")
+            registration_start = datetime.datetime.strptime(course[2], '%Y-%m-%d %H:%M:%S')
+            registration_end = datetime.datetime.strptime(course[3], '%Y-%m-%d %H:%M:%S')
+
+            if now < registration_start:
+                return jsonify({'message': '报名尚未开始'}), 400
+            if now > registration_end:
+                return jsonify({'message': '报名已经结束'}), 400
+
+            # 检查课程是否已满
+            print(f"课程容量: {course[0]}, 已报名人数: {course[1]}")
+            if course[1] >= course[0]:  # registered >= capacity
+                return jsonify({'message': '课程已满'}), 400
+
+            # 检查用户是否已报名
+            print(f"检查用户是否已报名，用户ID: {user_id}, 课程ID: {course_id}")
+            c.execute('SELECT id FROM registrations WHERE course_id = %s AND user_id = %s', (course_id, user_id))
+            if c.fetchone():
+                return jsonify({'message': '您已报名此课程'}), 400
+
+            # 报名课程
+            print(f"开始报名课程，用户ID: {user_id}, 课程ID: {course_id}")
+            registration_id = str(uuid.uuid4())
+            registration_date = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            print(f"生成报名记录ID: {registration_id}, 报名时间: {registration_date}")
+            c.execute('INSERT INTO registrations (id, course_id, user_id, registration_date) VALUES (%s, %s, %s, %s)',
+                      (registration_id, course_id, user_id, registration_date))
+            c.execute('UPDATE courses SET registered = registered + 1 WHERE id = %s', (course_id,))
+
+            conn.commit()
+            print("报名成功")
+            return jsonify({'message': '报名成功'}), 200
+        except Exception as e:
+            if conn:
+                conn.rollback()
+            print(f"报名课程失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'message': f'报名课程失败: {str(e)}'}), 500
+        finally:
+            if conn:
+                conn.close()
     except Exception as e:
-        return jsonify({'message': f'认证失败: {str(e)}'}), 500
-
-    conn = None
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
-
-        # 检查课程是否存在
-        c.execute('SELECT capacity, registered, registration_start, registration_end FROM courses WHERE id = %s',
-                  (course_id,))
-        course = c.fetchone()
-        if not course:
-            return jsonify({'message': '课程不存在'}), 404
-
-        # 检查是否在报名时间内
-        now = datetime.datetime.now()
-        registration_start = datetime.datetime.strptime(course[2], '%Y-%m-%d %H:%M:%S')
-        registration_end = datetime.datetime.strptime(course[3], '%Y-%m-%d %H:%M:%S')
-
-        if now < registration_start:
-            return jsonify({'message': '报名尚未开始'}), 400
-        if now > registration_end:
-            return jsonify({'message': '报名已经结束'}), 400
-
-        # 检查课程是否已满
-        if course[1] >= course[0]:  # registered >= capacity
-            return jsonify({'message': '课程已满'}), 400
-
-        # 检查用户是否已报名
-        c.execute('SELECT id FROM registrations WHERE course_id = %s AND user_id = %s', (course_id, user_id))
-        if c.fetchone():
-            return jsonify({'message': '您已报名此课程'}), 400
-
-        # 报名课程
-        registration_id = str(uuid.uuid4())
-        c.execute('INSERT INTO registrations (id, course_id, user_id) VALUES (%s, %s, %s)',
-                  (registration_id, course_id, user_id))
-        c.execute('UPDATE courses SET registered = registered + 1 WHERE id = %s', (course_id,))
-
-        conn.commit()
-        return jsonify({'message': '报名成功'}), 200
-    except Exception as e:
-        if conn:
-            conn.rollback()
-        print(f"报名课程失败: {str(e)}")
-        return jsonify({'message': f'报名课程失败: {str(e)}'}), 500
-    finally:
-        if conn:
-            conn.close()
+        print(f"处理报名请求失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'message': f'处理报名请求失败: {str(e)}'}), 500
 
 
 # 学生取消报名
@@ -451,65 +474,81 @@ def unregister_course(course_id):
 # 获取学生报名的课程列表
 @course_bp.route('/api/my-courses', methods=['GET'])
 def get_my_courses():
-    # 从Authorization头中获取token
-    token = request.headers.get('Authorization') or request.headers.get('authorization')
-    if not token:
-        return jsonify({'message': '缺少认证令牌'}), 401
-
-    # 移除Bearer前缀
-    if token.startswith('Bearer '):
-        token = token[7:]
-
     try:
-        # 解码token
-        data = jwt.decode(token, FLASK_CONFIG['SECRET_KEY'], algorithms=['HS256'])
-        user_id = data['user_id']
-    except jwt.ExpiredSignatureError:
-        return jsonify({'message': '认证令牌已过期'}), 401
-    except jwt.InvalidTokenError:
-        return jsonify({'message': '无效的认证令牌'}), 401
+        # 从Authorization头中获取token
+        token = request.headers.get('Authorization') or request.headers.get('authorization')
+        print(f"获取到的Authorization头: {token}")
+        if not token:
+            return jsonify({'message': '缺少认证令牌'}), 401
+
+        # 移除Bearer前缀
+        if token.startswith('Bearer '):
+            token = token[7:]
+            print(f"移除Bearer前缀后的token: {token[:20]}...")
+
+        try:
+            # 解码token
+            data = jwt.decode(token, FLASK_CONFIG['SECRET_KEY'], algorithms=['HS256'])
+            user_id = data['user_id']
+            print(f"解码token成功，用户ID: {user_id}")
+        except jwt.ExpiredSignatureError:
+            return jsonify({'message': '认证令牌已过期'}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({'message': '无效的认证令牌'}), 401
+        except Exception as e:
+            print(f"认证失败: {str(e)}")
+            return jsonify({'message': f'认证失败: {str(e)}'}), 500
+
+        conn = None
+        try:
+            conn = get_db_connection()
+            c = conn.cursor()
+
+            # 查询学生报名的课程
+            print(f"执行SQL查询获取用户报名记录，用户ID: {user_id}")
+            c.execute('''SELECT c.*, r.registration_date
+                         FROM courses c
+                         JOIN registrations r ON c.id = r.course_id
+                         WHERE r.user_id = %s
+                         ORDER BY c.date DESC''', (user_id,))
+            courses = c.fetchall()
+            print(f"查询结果数量: {len(courses)}")
+
+            # 转换为字典格式
+            course_list = []
+            for course in courses:
+                print(f"处理课程记录: {course}")
+                if isinstance(course, tuple) and len(course) >= 10:
+                    course_dict = {
+                        'id': course[0],
+                        'title': course[1],
+                        'description': course[2],
+                        'date': course[3],
+                        'time': course[4],
+                        'location': course[5],
+                        'capacity': course[6],
+                        'registered': course[7],
+                        'registration_start': course[8],
+                        'registration_end': course[9],
+                        'registered_at': course[10] if len(course) > 10 else None
+                    }
+                    course_list.append(course_dict)
+
+            print(f"返回课程列表数量: {len(course_list)}")
+            return jsonify(course_list), 200
+        except Exception as e:
+            print(f"获取我的课程失败: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return jsonify({'message': f'获取我的课程失败: {str(e)}'}), 500
+        finally:
+            if conn:
+                conn.close()
     except Exception as e:
-        return jsonify({'message': f'认证失败: {str(e)}'}), 500
-
-    conn = None
-    try:
-        conn = get_db_connection()
-        c = conn.cursor()
-
-        # 查询学生报名的课程
-        c.execute('''SELECT c.*, r.created_at
-                     FROM courses c
-                     JOIN registrations r ON c.id = r.course_id
-                     WHERE r.user_id = %s
-                     ORDER BY c.date DESC''', (user_id,))
-        courses = c.fetchall()
-
-        # 转换为字典格式
-        course_list = []
-        for course in courses:
-            if isinstance(course, tuple) and len(course) >= 10:
-                course_dict = {
-                    'id': course[0],
-                    'title': course[1],
-                    'description': course[2],
-                    'date': course[3],
-                    'time': course[4],
-                    'location': course[5],
-                    'capacity': course[6],
-                    'registered': course[7],
-                    'registration_start': course[8],
-                    'registration_end': course[9],
-                    'registered_at': course[10] if len(course) > 10 else None
-                }
-                course_list.append(course_dict)
-
-        return jsonify(course_list), 200
-    except Exception as e:
-        print(f"获取我的课程失败: {str(e)}")
-        return jsonify({'message': f'获取我的课程失败: {str(e)}'}), 500
-    finally:
-        if conn:
-            conn.close()
+        print(f"处理请求失败: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'message': f'处理请求失败: {str(e)}'}), 500
 
 
 # 提供一个函数来注册蓝图
