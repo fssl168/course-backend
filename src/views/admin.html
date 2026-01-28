@@ -1,0 +1,1148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>院前培训报名系统 - 管理后台</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        
+        .admin-container {
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background-color: #333;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .navbar-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        
+        .btn-logout {
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-logout:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .course-filters {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .search-input {
+            flex: 1;
+            min-width: 300px;
+            padding: 10px 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .status-filters {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .status-btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+        
+        .status-btn:hover {
+            background-color: #f0f0f0;
+        }
+        
+        .status-btn.active {
+            background-color: #4CAF50;
+            color: white;
+            border-color: #4CAF50;
+        }
+        
+        .admin-content {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .admin-content h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .admin-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .admin-section h2 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .course-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            grid-column: 1 / -1;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: bold;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn-submit {
+            grid-column: 1 / -1;
+            padding: 12px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-submit:hover {
+            background-color: #45a049;
+        }
+        
+        .courses-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .course-card {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .course-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .course-header h3 {
+            color: #4CAF50;
+            margin: 0;
+        }
+        
+        .course-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-edit {
+            padding: 6px 12px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-edit:hover {
+            background-color: #0b7dda;
+        }
+        
+        .btn-list {
+            padding: 6px 12px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-list:hover {
+            background-color: #f57c00;
+        }
+        
+        .btn-delete {
+            padding: 6px 12px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-delete:hover {
+            background-color: #da190b;
+        }
+        
+        .btn-edit.disabled,
+        .btn-delete.disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+        
+        .btn-edit.disabled:hover,
+        .btn-delete.disabled:hover {
+            background-color: #cccccc;
+        }
+        
+        /* 报名人员列表样式 */
+        .registrations-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .registrations-table th,
+        .registrations-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .registrations-table th {
+            background-color: #f2f2f2;
+            font-weight: bold;
+        }
+        
+        .registrations-table tr:hover {
+            background-color: #f5f5f5;
+        }
+        
+        .course-description {
+            color: #666;
+            margin-bottom: 15px;
+            line-height: 1.5;
+        }
+        
+        .course-info {
+            margin-bottom: 10px;
+        }
+        
+        .course-info p {
+            margin: 5px 0;
+            color: #555;
+        }
+        
+        /* 弹窗样式 */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h3 {
+            margin: 0;
+            color: #333;
+        }
+        
+        .btn-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s ease;
+        }
+        
+        .btn-close:hover {
+            color: #333;
+        }
+        
+        .modal-footer {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            padding: 15px 0;
+        }
+        
+        .btn-cancel {
+            padding: 10px 20px;
+            background-color: #999;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-cancel:hover {
+            background-color: #777;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <nav class="navbar">
+            <div class="navbar-brand">院前培训报名系统 - 管理后台</div>
+            <div class="navbar-links">
+                {% if user %}
+                <span>{{ user.username }} - {% if user.is_admin == 1 %}管理员{% else %}普通用户{% endif %}</span>
+                {% else %}
+                <span id="userInfo"></span>
+                {% endif %}
+                <a href="/admin">课程管理</a>
+                <a href="/admin/users">用户管理</a>
+                <a href="/">首页</a>
+                <button onclick="logout()" class="btn-logout">退出登录</button>
+            </div>
+        </nav>
+
+        <div class="admin-content">
+            <h1>课程管理</h1>
+            
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+            
+            {% if success %}
+                <div class="success-message">{{ success }}</div>
+            {% endif %}
+            
+            <!-- 发布/编辑课程 -->
+            <div class="admin-section">
+                <h2 id="formTitle">发布新课程</h2>
+                <form id="courseForm" class="course-form" enctype="multipart/form-data">
+                    <input type="hidden" id="courseId" name="id">
+                    <div class="form-group">
+                        <label for="title">课程标题</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="description">课程描述</label>
+                        <textarea id="description" name="description" required></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="date">日期</label>
+                            <input type="date" id="date" name="date" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="time">时间</label>
+                            <input type="text" id="time" name="time" placeholder="如：09:00-17:00" required>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="location">地点</label>
+                        <input type="text" id="location" name="location" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="capacity">容量</label>
+                        <input type="number" id="capacity" name="capacity" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="image">课程图片</label>
+                        <input type="file" id="image" name="image" accept="image/*">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="registrationStart">报名时间 (registration_start)</label>
+                            <input type="datetime-local" id="registrationStart" name="registrationStart" step="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="classStart">上课时间 (registration_end)</label>
+                            <input type="datetime-local" id="classStart" name="classStart" step="1" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" onclick="resetForm()" class="btn-cancel">取消编辑</button>
+                        <button type="submit" class="btn-submit">发布课程</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- 课程列表 -->
+            <div class="admin-section">
+                <h2>课程列表</h2>
+                
+                <!-- 搜索和状态筛选 -->
+                <div class="course-filters">
+                    <input 
+                        id="searchInput" 
+                        type="text" 
+                        placeholder="搜索课程标题或描述" 
+                        class="search-input"
+                    >
+                    <div class="status-filters">
+                        <button 
+                            data-status="" 
+                            class="status-btn active"
+                            onclick="filterCourses('')"
+                        >全部</button>
+                        <button 
+                            data-status="upcoming" 
+                            class="status-btn"
+                            onclick="filterCourses('upcoming')"
+                        >未开始</button>
+                        <button 
+                            data-status="ongoing" 
+                            class="status-btn"
+                            onclick="filterCourses('ongoing')"
+                        >进行中</button>
+                        <button 
+                            data-status="ended" 
+                            class="status-btn"
+                            onclick="filterCourses('ended')"
+                        >已结束</button>
+                    </div>
+                </div>
+                
+                <div class="courses-list">
+                    {% for course in courses %}
+                        <div class="course-card">
+                            <div class="course-header">
+                                <h3>{{ course.title }}</h3>
+                                <div class="course-actions">
+                                    <button class="btn-list" onclick="viewCourseList('{{ course.id }}', '{{ course.title }}')">名单</button>
+                                    {% set today = '2026-01-27' %}
+                                    {% if course.date < today %}
+                                        <button class="btn-edit disabled" data-date="{{ course.date }}" title="已结束课程不可编辑">编辑</button>
+                                        <button class="btn-delete disabled" data-date="{{ course.date }}" title="已结束课程不可删除">删除</button>
+                                    {% else %}
+                                        <button class="btn-edit" onclick="editCourse('{{ course.id }}')" data-date="{{ course.date }}">编辑</button>
+                                        <button class="btn-delete" onclick="deleteCourse('{{ course.id }}')" data-date="{{ course.date }}">删除</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <p class="course-description">{{ course.description }}</p>
+                            {% if course.image %}
+                                <div class="course-image">
+                                    <img src="{{ course.image }}" alt="{{ course.title }}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin-bottom: 15px;">
+                                </div>
+                            {% endif %}
+                            <div class="course-info">
+                                <p><strong>日期：</strong>{{ course.date }}</p>
+                                <p><strong>时间：</strong>{{ course.time }}</p>
+                                <p><strong>地点：</strong>{{ course.location }}</p>
+                                <p><strong>容量：</strong>{{ course.registered }}/{{ course.capacity }}</p>
+                                <p><strong>报名时间：</strong>{{ course.registration_start }} 至 {{ course.registration_end }}</p>
+                                <p><strong>上课时间：</strong>{{ course.class_start }} 至 {{ course.date }} 23:59:59</p>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <!-- 报名人员列表弹窗 -->
+    <div id="listModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>报名人员列表</h3>
+                <button class="btn-close" onclick="closeListModal()">&times;</button>
+            </div>
+            <div class="admin-section">
+                <h4 id="courseTitle"></h4>
+                <div id="registrationsContainer">
+                    <!-- 报名人员列表将通过JavaScript动态生成 -->
+                    <p>加载中...</p>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding: 20px;">
+                <button type="button" onclick="closeListModal()" class="btn-cancel">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 从cookie中获取token
+        function getToken() {
+            const cookieValue = document.cookie
+                .split('; ')
+                .find(row => row.startsWith('token='))
+                ?.split('=')[1];
+            return cookieValue;
+        }
+        
+        // 检查登录状态
+        function checkLoginStatus() {
+            const token = getToken();
+            if (!token) {
+                window.location.href = '/admin/login';
+                return null;
+            }
+            return token;
+        }
+        
+        // 获取课程列表
+        function fetchCourses() {
+            // 课程列表已经通过后端模板渲染，不需要重新获取
+            // 刷新页面以获取最新数据
+            window.location.reload();
+        }
+        
+        // 检查课程是否已结束
+        function isCourseEnded(date, registrationEnd) {
+            // 已结束课程时间以上课时间的后一天
+            const today = new Date();
+            const classEndDate = new Date(registrationEnd);
+            const endDate = new Date(classEndDate);
+            endDate.setDate(endDate.getDate() + 1);
+            return today > endDate;
+        }
+        
+        // 编辑课程
+        function editCourse(courseId) {
+            const token = checkLoginStatus();
+            if (!token) return;
+            
+            // 获取按钮元素，检查课程日期和上课时间
+            const button = event.target;
+            const courseDate = button.dataset.date;
+            const registrationEnd = button.dataset.registrationEnd;
+            
+            if (isCourseEnded(courseDate, registrationEnd)) {
+                alert('已结束课程不可编辑');
+                return;
+            }
+            
+            // 获取课程信息
+            fetch(`/api/courses/${courseId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // 检查是否是404错误
+                    if (response.status === 404) {
+                        return response.json().then(data => {
+                            throw new Error(data.message || '课程不存在');
+                        });
+                    }
+                    throw new Error('网络响应失败');
+                }
+                return response.json();
+            })
+            .then(course => {
+                if (course) {
+                    // 填充编辑表单
+                    document.getElementById('courseId').value = course.id;
+                    document.getElementById('title').value = course.title;
+                    document.getElementById('description').value = course.description;
+                    document.getElementById('date').value = course.date;
+                    document.getElementById('time').value = course.time;
+                    document.getElementById('location').value = course.location;
+                    document.getElementById('capacity').value = course.capacity;
+                    
+                    // 确保时间格式包含时分秒
+                    const formatTimeForInput = (timeString) => {
+                        console.log('原始时间字符串:', timeString);
+                        if (timeString && timeString.includes(' ')) {
+                            // 确保时间字符串包含时分秒
+                            const parts = timeString.split(' ');
+                            if (parts.length === 2) {
+                                const datePart = parts[0];
+                                let timePart = parts[1];
+                                
+                                console.log('日期部分:', datePart);
+                                console.log('时间部分:', timePart);
+                                
+                                // 确保时间部分包含时分秒
+                                if (timePart) {
+                                    // 分割时间部分，确保包含时分秒
+                                    const timeComponents = timePart.split(':');
+                                    console.log('时间组件:', timeComponents);
+                                    if (timeComponents.length === 2) {
+                                        // 只包含时分，添加秒
+                                        timePart = timeComponents[0] + ':' + timeComponents[1] + ':00';
+                                        console.log('添加秒后的时间:', timePart);
+                                    } else if (timeComponents.length === 3) {
+                                        // 包含时分秒，保持不变
+                                        console.log('时间已包含秒:', timePart);
+                                    } else {
+                                        // 时间格式不正确，使用默认值
+                                        timePart = '00:00:00';
+                                        console.log('使用默认时间:', timePart);
+                                    }
+                                } else {
+                                    // 没有时间部分，使用默认值
+                                    timePart = '00:00:00';
+                                    console.log('没有时间部分，使用默认值:', timePart);
+                                }
+                                
+                                const result = datePart + 'T' + timePart;
+                                console.log('格式化后的时间:', result);
+                                return result;
+                            }
+                        }
+                        console.log('返回原始时间:', timeString);
+                        return timeString;
+                    };
+                    
+                    // 设置发布时间和上课时间，确保格式包含时分秒
+                    document.getElementById('registrationStart').value = formatTimeForInput(course.registration_start);
+                    // 上课时间获取registration_end日期
+                    document.getElementById('classStart').value = formatTimeForInput(course.registration_end);
+                    
+                    // 更新表单标题
+                    document.getElementById('formTitle').textContent = '编辑课程';
+                    document.querySelector('#courseForm .btn-submit').textContent = '保存修改';
+                    
+                    // 滚动到表单顶部
+                    document.querySelector('.admin-section').scrollIntoView({ behavior: 'smooth' });
+                }
+            })
+            .catch(error => {
+                console.error('获取课程信息失败:', error);
+                alert('获取课程信息失败: ' + error.message);
+                // 刷新课程列表，确保显示最新数据
+                filterCourses('');
+            });
+        }
+        
+        // 重置表单
+        function resetForm() {
+            document.getElementById('courseId').value = '';
+            document.getElementById('title').value = '';
+            document.getElementById('description').value = '';
+            document.getElementById('date').value = '';
+            document.getElementById('time').value = '';
+            document.getElementById('location').value = '';
+            document.getElementById('capacity').value = '';
+            document.getElementById('registrationStart').value = '';
+            document.getElementById('classStart').value = '';
+            
+            // 更新表单标题
+            document.getElementById('formTitle').textContent = '发布新课程';
+            document.querySelector('#courseForm .btn-submit').textContent = '发布课程';
+        }
+        
+        // 查看课程报名人员列表
+        function viewCourseList(courseId, courseTitle) {
+            const token = checkLoginStatus();
+            if (!token) return;
+            
+            // 设置课程标题
+            document.getElementById('courseTitle').textContent = `课程：${courseTitle}`;
+            
+            // 获取报名人员列表
+            fetch(`/api/course-registrations/${courseId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应失败');
+                }
+                return response.json();
+            })
+            .then(registrations => {
+                const container = document.getElementById('registrationsContainer');
+                
+                if (registrations.length === 0) {
+                    container.innerHTML = '<p>暂无报名人员</p>';
+                } else {
+                    // 生成报名人员列表表格
+                    let html = `
+                        <table class="registrations-table">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>姓名</th>
+                                    <th>邮箱</th>
+                                    <th>电话</th>
+                                    <th>单位</th>
+                                    <th>报名时间</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+                    
+                    registrations.forEach((registration, index) => {
+                        const user = registration.user;
+                        html += `
+                            <tr>
+                                <td>${index + 1}</td>
+                                <td>${user.username}</td>
+                                <td>${user.email}</td>
+                                <td>${user.phone}</td>
+                                <td>${user.organization}</td>
+                                <td>${new Date(registration.registration_date).toLocaleString()}</td>
+                                <td>
+                                    <button class="btn-cancel" onclick="cancelRegistration('${registration.id}', '${courseId}')">取消报名</button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                    
+                    html += `
+                            </tbody>
+                        </table>
+                        <p style="margin-top: 10px;">共 ${registrations.length} 人报名</p>
+                    `;
+                    
+                    container.innerHTML = html;
+                }
+                
+                // 显示弹窗
+                document.getElementById('listModal').style.display = 'flex';
+            })
+            .catch(error => {
+                console.error('获取报名人员列表失败:', error);
+                alert('获取报名人员列表失败');
+                document.getElementById('registrationsContainer').innerHTML = '<p>获取报名人员列表失败</p>';
+            });
+        }
+        
+        // 关闭报名人员列表弹窗
+        function closeListModal() {
+            document.getElementById('listModal').style.display = 'none';
+        }
+        
+        // 取消报名
+        function cancelRegistration(registrationId, courseId) {
+            const token = checkLoginStatus();
+            if (!token) return;
+            
+            if (confirm('确定要取消这个报名记录吗？')) {
+                fetch(`/api/course-registrations/${registrationId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        // 刷新报名人员列表
+                        viewCourseList(courseId, document.getElementById('courseTitle').textContent.replace('课程：', ''));
+                    }
+                })
+                .catch(error => {
+                    console.error('取消报名失败:', error);
+                    alert('取消报名失败');
+                });
+            }
+        }
+        
+        // 删除课程
+        function deleteCourse(courseId) {
+            const token = checkLoginStatus();
+            if (!token) return;
+            
+            // 获取按钮元素，检查课程日期和上课时间
+            const button = event.target;
+            const courseDate = button.dataset.date;
+            const registrationEnd = button.dataset.registrationEnd;
+            
+            if (isCourseEnded(courseDate, registrationEnd)) {
+                alert('已结束课程不可删除');
+                return;
+            }
+            
+            if (confirm('确定要删除这个课程吗？删除后相关的报名记录也会被删除。')) {
+                fetch(`/api/admin/courses/${courseId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('网络响应失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        // 刷新课程列表
+                        fetchCourses();
+                    }
+                })
+                .catch(error => {
+                    console.error('删除课程失败:', error);
+                    alert('删除课程失败');
+                });
+            }
+        }
+        
+        // 退出登录
+        function logout() {
+            // 后端使用session认证，直接访问logout端点
+            window.location.href = '/admin/logout';
+        }
+        
+        // 处理课程表单提交（创建或编辑）
+        // 注：事件监听器已移到window.onload函数中
+        
+        // 筛选课程
+        function filterCourses(status) {
+            // 更新状态按钮的激活状态
+            document.querySelectorAll('.status-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            // 找到对应的状态按钮并添加激活状态
+            document.querySelector(`[data-status="${status}"]`).classList.add('active');
+            
+            // 获取搜索关键词
+            const searchQuery = document.getElementById('searchInput').value;
+            
+            // 构建API请求URL
+            let url = '/api/courses';
+            let params = [];
+            
+            if (searchQuery) {
+                params.push(`search=${encodeURIComponent(searchQuery)}`);
+            }
+            if (status) {
+                params.push(`status=${status}`);
+            }
+            
+            if (params.length > 0) {
+                url += '?' + params.join('&');
+            }
+            
+            // 发送API请求
+            const token = checkLoginStatus();
+            if (!token) return;
+            
+            fetch(url, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('网络响应失败');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // 更新课程列表
+                const coursesList = document.querySelector('.courses-list');
+                coursesList.innerHTML = '';
+                
+                // 获取courses数组
+                const courses = data.courses || [];
+                
+                if (courses.length === 0) {
+                    coursesList.innerHTML = '<p>暂无课程</p>';
+                    return;
+                }
+                
+                courses.forEach(course => {
+                    const courseCard = document.createElement('div');
+                    courseCard.className = 'course-card';
+                    const isEnded = isCourseEnded(course.date, course.registration_end);
+                    const editBtnClass = isEnded ? 'btn-edit disabled' : 'btn-edit';
+                    const deleteBtnClass = isEnded ? 'btn-delete disabled' : 'btn-delete';
+                    const editBtnOnclick = isEnded ? '' : `onclick="editCourse('${course.id}')"`;
+                    const deleteBtnOnclick = isEnded ? '' : `onclick="deleteCourse('${course.id}')"`;
+                    courseCard.innerHTML = `
+                        <div class="course-header">
+                            <h3>${course.title}</h3>
+                            <div class="course-actions">
+                                <button class="btn-list" onclick="viewCourseList('${course.id}', '${course.title}')">名单</button>
+                                <button class="${editBtnClass}" ${editBtnOnclick} data-date="${course.date}" data-registration-end="${course.registration_end}" ${isEnded ? 'title="已结束课程不可编辑"' : ''}>编辑</button>
+                                <button class="${deleteBtnClass}" ${deleteBtnOnclick} data-date="${course.date}" data-registration-end="${course.registration_end}" ${isEnded ? 'title="已结束课程不可删除"' : ''}>删除</button>
+                            </div>
+                        </div>
+                        <p class="course-description">${course.description}</p>
+                        ${course.image ? `<div class="course-image"><img src="${course.image}" alt="${course.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 4px; margin-bottom: 15px;"></div>` : ''}
+                        <div class="course-info">
+                            <p><strong>日期：</strong>${course.date}</p>
+                            <p><strong>时间：</strong>${course.time}</p>
+                            <p><strong>地点：</strong>${course.location}</p>
+                            <p><strong>容量：</strong>${course.registered >= course.capacity ? '已报满' : course.registered + '/' + course.capacity}</p>
+                            <p><strong>报名时间：</strong>${course.registration_start} 至 ${course.registration_end}</p>
+                            <p><strong>上课时间：</strong>${course.class_start} 至 ${course.date} 23:59:59</p>
+                        </div>
+                    `;
+                    coursesList.appendChild(courseCard);
+                });
+            })
+            .catch(error => {
+                console.error('获取课程列表失败:', error);
+                alert('获取课程列表失败');
+            });
+        }
+        
+        // 获取当前用户信息
+        function fetchCurrentUserInfo() {
+            const token = checkLoginStatus();
+            if (!token) return;
+            
+            // 获取当前用户信息
+            fetch('/api/admin/users', {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('获取用户信息失败');
+                }
+                return response.json();
+            })
+            .then(users => {
+                // 从token中获取用户ID
+                const tokenData = JSON.parse(atob(token.split('.')[1]));
+                const userId = tokenData.user_id;
+                
+                // 查找当前用户
+                const currentUser = users.find(user => user.id === userId);
+                if (currentUser) {
+                    // 显示用户信息，包括单位和用户类型
+                    const userInfoElement = document.getElementById('userInfo');
+                    if (userInfoElement) {
+                        const userType = currentUser.is_admin === 1 ? '管理员' : '普通用户';
+                        userInfoElement.textContent = `${currentUser.username} - ${currentUser.organization} - ${userType}`;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('获取用户信息失败:', error);
+            });
+        }
+        
+        // 页面加载时执行
+        window.onload = function() {
+            checkLoginStatus();
+            // 获取并显示当前用户信息
+            fetchCurrentUserInfo();
+            
+            // 绑定表单提交事件监听器
+            const courseForm = document.getElementById('courseForm');
+            if (courseForm) {
+                courseForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const token = checkLoginStatus();
+                    if (!token) return;
+                    
+                    const formData = new FormData(this);
+                    const courseId = formData.get('id');
+                    // 获取表单数据
+                    const registrationStart = formData.get('registrationStart');
+                    const classStart = formData.get('classStart');
+                    
+                    // 确保时间格式包含时分秒
+                    const formatDateTime = (dateTimeString) => {
+                        // 确保时间字符串包含时分秒
+                        if (dateTimeString && dateTimeString.includes('T')) {
+                            // 确保时间部分包含时分秒
+                            const parts = dateTimeString.split('T');
+                            if (parts.length === 2) {
+                                const datePart = parts[0];
+                                let timePart = parts[1];
+                                
+                                // 确保时间部分包含时分秒
+                                if (timePart && timePart.length === 5) {
+                                    // 只包含时分，添加秒
+                                    timePart += ':00';
+                                }
+                                
+                                return datePart + ' ' + timePart;
+                            }
+                            return dateTimeString.replace('T', ' ');
+                        }
+                        return dateTimeString;
+                    };
+                    
+                    // 添加格式化后的时间到FormData
+                    formData.set('registration_start', formatDateTime(registrationStart));
+                    formData.set('registration_end', formatDateTime(classStart));
+                    formData.set('class_start', formatDateTime(classStart));
+                    formData.set('class_end', formatDateTime(classStart));
+                    
+                    let url, method;
+                    
+                    if (courseId) {
+                        // 编辑课程
+                        url = `/api/admin/courses/${courseId}`;
+                        method = 'PUT';
+                    } else {
+                        // 创建课程
+                        url = '/api/admin/courses';
+                        method = 'POST';
+                    }
+                    
+                    fetch(url, {
+                        method: method,
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: formData
+                    })
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('网络响应失败');
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.message) {
+                            alert(data.message);
+                            // 重置表单
+                            resetForm();
+                            // 刷新课程列表
+                            filterCourses('');
+                        }
+                    })
+                    .catch(error => {
+                        console.error((courseId ? '更新课程' : '创建课程') + '失败:', error);
+                        alert((courseId ? '更新课程' : '创建课程') + '失败: ' + error.message);
+                        // 打印详细的错误信息到控制台
+                        console.error('请求URL:', url);
+                        console.error('请求方法:', method);
+                    });
+                });
+            }
+            
+            // 绑定搜索输入事件
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    const status = document.querySelector('.status-btn.active').dataset.status;
+                    filterCourses(status);
+                });
+            }
+        };
+    </script>
+</body>
+</html>

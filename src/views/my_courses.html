@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的报名记录 - 院前培训报名系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        
+        .my-courses-container {
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .navbar-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        
+        .navbar-links a:hover {
+            text-decoration: underline;
+        }
+        
+        .btn-logout {
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-logout:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .registrations-container {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .registrations-container h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .no-courses {
+            text-align: center;
+            padding: 50px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+        
+        .no-courses p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .btn-back {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-back:hover {
+            background-color: #45a049;
+        }
+        
+        .registrations-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+        }
+        
+        .registration-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        .registration-card h3 {
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+        
+        .course-info p {
+            margin: 8px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="my-courses-container">
+        <nav class="navbar">
+            <div class="navbar-brand">院前培训报名系统</div>
+            <div class="navbar-links">
+                <span id="userInfo"></span>
+                <a href="/">首页</a>
+                <button onclick="logout()" class="btn-logout">退出登录</button>
+            </div>
+        </nav>
+
+        <div class="registrations-container">
+            <h1>我的报名记录</h1>
+            <div id="noCourses" class="no-courses" style="display: none;">
+                <p>您还没有报名任何课程</p>
+                <a href="/" class="btn-back">返回首页</a>
+            </div>
+            <div id="registrationsList" class="registrations-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // 检查登录状态
+        function checkLoginStatus() {
+            const userStr = localStorage.getItem('user');
+            if (userStr) {
+                const user = JSON.parse(userStr);
+                document.getElementById('userInfo').textContent = `${user.username} - ${user.organization}`;
+                return user;
+            } else {
+                // 未登录，跳转到登录页面
+                window.location.href = '/login';
+                return null;
+            }
+        }
+        
+        // 获取报名记录
+        function fetchRegistrations() {
+            const user = checkLoginStatus();
+            if (!user) return;
+            
+            fetch(`/api/user-registrations/${user.id}`)
+            .then(response => response.json())
+            .then(data => {
+                const registrationsList = document.getElementById('registrationsList');
+                const noCourses = document.getElementById('noCourses');
+                
+                if (Array.isArray(data) && data.length === 0) {
+                    noCourses.style.display = 'block';
+                    registrationsList.style.display = 'none';
+                } else {
+                    noCourses.style.display = 'none';
+                    registrationsList.style.display = 'grid';
+                    
+                    // 清空列表
+                    registrationsList.innerHTML = '';
+                    
+                    // 填充报名记录
+                    data.forEach(registration => {
+                        if (registration.course) {
+                            const registrationCard = document.createElement('div');
+                            registrationCard.className = 'registration-card';
+                            registrationCard.innerHTML = `
+                                <h3>${registration.course.title}</h3>
+                                <div class="course-info">
+                                    <p><strong>日期：</strong>${registration.course.date}</p>
+                                    <p><strong>时间：</strong>${registration.course.time}</p>
+                                    <p><strong>地点：</strong>${registration.course.location}</p>
+                                    <p><strong>报名时间：</strong>${formatDate(registration.registration_date)}</p>
+                                </div>
+                            `;
+                            registrationsList.appendChild(registrationCard);
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('获取报名记录失败:', error);
+                alert('获取报名记录失败');
+            });
+        }
+        
+        // 格式化日期
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString();
+        }
+        
+        // 退出登录
+        function logout() {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+        }
+        
+        // 页面加载时获取报名记录
+        window.onload = function() {
+            fetchRegistrations();
+        };
+    </script>
+</body>
+</html>

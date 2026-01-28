@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>院前培训报名系统 - 用户管理</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+        }
+        
+        .admin-container {
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            background-color: #333;
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-brand {
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .navbar-links {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .navbar-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
+        }
+        
+        .btn-logout {
+            background-color: transparent;
+            color: white;
+            border: 1px solid white;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-logout:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .admin-content {
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 0 20px;
+        }
+        
+        .admin-content h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 30px;
+        }
+        
+        .admin-section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .admin-section h2 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 10px;
+        }
+        
+        .users-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .user-card {
+            background-color: #f5f5f5;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+        
+        .user-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 10px;
+        }
+        
+        .user-header h3 {
+            color: #4CAF50;
+            margin: 0;
+        }
+        
+        .user-role {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .user-role.admin {
+            background-color: #2196F3;
+            color: white;
+        }
+        
+        .user-role.user {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .user-info {
+            margin-bottom: 10px;
+        }
+        
+        .user-info p {
+            margin: 5px 0;
+            color: #555;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .btn-edit {
+            padding: 6px 12px;
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-edit:hover {
+            background-color: #0b7dda;
+        }
+        
+        .btn-delete {
+            padding: 6px 12px;
+            background-color: #f44336;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-delete:hover {
+            background-color: #da190b;
+        }
+        
+        .btn-reset {
+            padding: 6px 12px;
+            background-color: #ff9800;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+        }
+        
+        .btn-reset:hover {
+            background-color: #e68a00;
+        }
+        
+        .success-message {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .error-message {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <nav class="navbar">
+            <div class="navbar-brand">院前培训报名系统 - 管理后台</div>
+            <div class="navbar-links">
+                <span>{{ user.username }} - {% if user.is_admin == 1 %}管理员{% else %}普通用户{% endif %}</span>
+                <a href="/admin">课程管理</a>
+                <a href="/admin/users">用户管理</a>
+                <a href="/admin/logout"><button class="btn-logout">退出登录</button></a>
+            </div>
+        </nav>
+
+        <div class="admin-content">
+            <h1>用户管理</h1>
+            
+            {% if error %}
+                <div class="error-message">{{ error }}</div>
+            {% endif %}
+            
+            {% if success %}
+                <div class="success-message">{{ success }}</div>
+            {% endif %}
+            
+            <div class="admin-section">
+                <h2>用户列表</h2>
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <button class="btn-edit" onclick="filterUsers('all')" style="flex: 1;">全部用户</button>
+                    <button class="btn-edit" onclick="filterUsers('admin')" style="flex: 1;">管理员</button>
+                    <button class="btn-edit" onclick="filterUsers('wechat')" style="flex: 1;">微信用户</button>
+                    <button class="btn-edit" onclick="filterUsers('normal')" style="flex: 1;">普通用户</button>
+                </div>
+                <div class="users-list" id="usersList">
+                    {% for user in users %}
+                        <div class="user-card">
+                            <div class="user-header">
+                                <h3>{{ user.username }}</h3>
+                                <div style="display: flex; gap: 5px;">
+                                    <span class="user-role {% if user.is_admin == 1 %}admin{% else %}user{% endif %}">
+                                        {% if user.is_admin == 1 %}管理员{% else %}普通用户{% endif %}
+                                    </span>
+                                    {% if user.is_wechat_user == 1 %}<span class="user-role" style="background-color: #07C160; color: white;">微信用户</span>{% endif %}
+                                </div>
+                            </div>
+                            <div class="user-info">
+                                <p><strong>邮箱：</strong>{{ user.email }}</p>
+                                <p><strong>电话：</strong>{{ user.phone }}</p>
+                                <p><strong>单位：</strong>{{ user.organization }}</p>
+                                {% if user.is_wechat_user == 1 %}<p><strong>登录方式：</strong>微信</p>{% endif %}
+                            </div>
+                            <div style="display: none;" class="is-wechat-user">{{ user.is_wechat_user }}</div>
+                            <div style="display: none;" class="is-admin">{{ user.is_admin }}</div>
+                            <div class="user-actions">
+                                <button class="btn-edit" onclick="editUser('{{ user.id }}')">编辑</button>
+                                <button class="btn-reset" onclick="resetPassword('{{ user.id }}')">重置密码</button>
+                                <button class="btn-delete" onclick="deleteUser('{{ user.id }}')">删除</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 编辑用户
+        function editUser(userId) {
+            // 这里可以实现编辑用户的逻辑
+            alert('编辑用户功能开发中');
+        }
+        
+        // 重置密码
+        function resetPassword(userId) {
+            if (confirm('确定要重置该用户的密码吗？重置后密码将变为默认密码 "123456"')) {
+                fetch(`/api/admin/users/${userId}/reset-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer {{ token }}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        // 刷新页面
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('重置密码失败:', error);
+                    alert('重置密码失败');
+                });
+            }
+        }
+        
+        // 删除用户
+        function deleteUser(userId) {
+            if (confirm('确定要删除这个用户吗？删除后相关的数据也会被删除。')) {
+                fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer {{ token }}`,
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.message) {
+                        alert(data.message);
+                        // 刷新页面
+                        window.location.reload();
+                    }
+                })
+                .catch(error => {
+                    console.error('删除用户失败:', error);
+                    alert('删除用户失败');
+                });
+            }
+        }
+        
+        // 筛选用户
+        function filterUsers(type) {
+            const userCards = document.querySelectorAll('.user-card');
+            userCards.forEach(card => {
+                let isWechatUser = false;
+                let isAdmin = false;
+                const isWechatUserEl = card.querySelector('.is-wechat-user');
+                const isAdminEl = card.querySelector('.is-admin');
+                if (isWechatUserEl) {
+                    isWechatUser = isWechatUserEl.textContent.trim() === '1';
+                }
+                if (isAdminEl) {
+                    isAdmin = isAdminEl.textContent.trim() === '1';
+                }
+                if (type === 'all') {
+                    card.style.display = 'block';
+                } else if (type === 'admin') {
+                    if (isAdmin) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                } else if (type === 'wechat') {
+                    if (isWechatUser && !isAdmin) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                } else if (type === 'normal') {
+                    if (!isWechatUser && !isAdmin) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
