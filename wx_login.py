@@ -11,8 +11,17 @@ from config import WECHAT_CONFIG, FLASK_CONFIG
 wx_login_bp = Blueprint('wx_login', __name__)
 
 
-# 微信登录
-@wx_login_bp.route('/api/wx-login', methods=['GET'])
+# 微信授权页面
+@wx_login_bp.route('/api/wechat/auth', methods=['GET'])
+def wechat_auth():
+    # 重定向到微信授权页面
+    import urllib.parse
+    redirect_uri = urllib.parse.quote('http://localhost:5000/api/wechat/login')
+    wechat_auth_url = f'https://open.weixin.qq.com/connect/qrconnect?appid={WECHAT_CONFIG["app_id"]}&redirect_uri={redirect_uri}&response_type=code&scope=snsapi_login#wechat_redirect'
+    return redirect(wechat_auth_url)
+
+# 微信登录回调
+@wx_login_bp.route('/api/wechat/login', methods=['GET'])
 def wx_login():
     code = request.args.get('code')
     if not code:
