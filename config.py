@@ -16,3 +16,17 @@ WECHAT_CONFIG = {
 FLASK_CONFIG = {
     'SECRET_KEY': 'your-secret-key'
 }
+
+# 环境配置
+ENVIRONMENT = {
+    'development': {
+        'debug': True,
+        'host': 'localhost',
+        'port': 5000
+    },
+    'production': {
+        'debug': False,
+        'host': '0.0.0.0',
+        'port': 5000
+    }
+}
