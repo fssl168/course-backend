@@ -3,6 +3,7 @@ import uuid
 import bcrypt
 import jwt
 import datetime
+import requests
 from db_init import get_db_connection
 from wechat_utils import get_wechat_access_token, get_wechat_user_info, get_wechat_session_key, decrypt_wechat_phone
 from config import WECHAT_CONFIG, FLASK_CONFIG
@@ -15,6 +16,15 @@ wx_login_bp = Blueprint('wx_login', __name__)
 @wx_login_bp.route('/api/wechat/auth', methods=['GET'])
 def wechat_auth():
     # 重定向到微信授权页面
+    import urllib.parse
+    redirect_uri = urllib.parse.quote('http://localhost:5000/api/wechat/login')
+    wechat_auth_url = f'https://open.weixin.qq.com/connect/qrconnect?appid={WECHAT_CONFIG["app_id"]}&redirect_uri={redirect_uri}&response_type=code&scope=snsapi_login#wechat_redirect'
+    return redirect(wechat_auth_url)
+
+# 微信手机号授权页面
+@wx_login_bp.route('/api/wechat/phone-auth', methods=['GET'])
+def wechat_phone_auth():
+    # 重定向到微信授权页面，用于获取手机号
     import urllib.parse
     redirect_uri = urllib.parse.quote('http://localhost:5000/api/wechat/login')
     wechat_auth_url = f'https://open.weixin.qq.com/connect/qrconnect?appid={WECHAT_CONFIG["app_id"]}&redirect_uri={redirect_uri}&response_type=code&scope=snsapi_login#wechat_redirect'
@@ -121,8 +131,8 @@ def wx_login():
                     'email': user[2],
                     'phone': user[4],
                     'organization': user[5],
-                    'is_admin': user[6] if len(user) > 6 else 0,
-                    'is_wechat_user': user[9] if len(user) > 9 else 0
+                    'is_admin': user[7] if len(user) > 7 else 0,
+                    'is_wechat_user': user[10] if len(user) > 10 else 0
                 }
             }), 200
         except Exception as e:

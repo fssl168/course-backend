@@ -551,6 +551,43 @@ def get_my_courses():
         return jsonify({'message': f'处理请求失败: {str(e)}'}), 500
 
 
+# 获取某课程的报名人员列表
+@course_bp.route('/api/course-registrations/<course_id>', methods=['GET'])
+def get_course_registrations(course_id):
+    try:
+        conn = get_db_connection()
+        c = conn.cursor()
+
+        # 查询报名人员列表
+        c.execute('''
+            SELECT DISTINCT u.id, u.username, u.email, u.phone, u.organization, r.registration_date
+            FROM registrations r
+            JOIN users u ON r.user_id = u.id
+            WHERE r.course_id = %s
+            ORDER BY r.registration_date DESC
+        ''', (course_id,))
+        registrations = c.fetchall()
+        conn.close()
+
+        # 转换为字典列表
+        registrations_list = []
+        for reg in registrations:
+            if isinstance(reg, tuple) and len(reg) >= 6:
+                registration_dict = {
+                    'id': reg[0],
+                    'username': reg[1],
+                    'email': reg[2],
+                    'phone': reg[3],
+                    'organization': reg[4],
+                    'registration_date': reg[5]
+                }
+                registrations_list.append(registration_dict)
+
+        return jsonify(registrations_list), 200
+
+    except Exception as e:
+        return jsonify({'message': f'获取报名人员列表失败: {str(e)}'}), 500
+
 # 提供一个函数来注册蓝图
 def register_routes(app):
     app.register_blueprint(course_bp)

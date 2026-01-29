@@ -14,8 +14,12 @@ import os
 uploads_dir = os.path.join(app.root_path, 'uploads')
 if not os.path.exists(uploads_dir):
     os.makedirs(uploads_dir)
-app.static_folder = 'uploads'
-app.add_url_rule('/uploads/<path:filename>', endpoint='uploads', view_func=app.send_static_file)
+# 保持默认的静态文件夹设置，同时添加uploads目录的访问
+from flask import send_from_directory
+
+@app.route('/uploads/<path:filename>')
+def uploads(filename):
+    return send_from_directory(uploads_dir, filename)
 
 # 初始化数据库
 init_db()

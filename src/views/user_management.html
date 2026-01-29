@@ -208,6 +208,139 @@
             margin-bottom: 20px;
             text-align: center;
         }
+        
+        /* 模态框样式 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+        
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .modal-header h3 {
+            color: #333;
+            margin: 0;
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        
+        .close:hover,
+        .close:focus {
+            color: black;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        
+        /* 表单样式 */
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+        
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.2);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .btn-primary {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-primary:hover {
+            background-color: #45a049;
+        }
+        
+        .btn-secondary {
+            padding: 8px 16px;
+            background-color: #666;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.3s ease;
+            flex: 1;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #555;
+        }
+        
+        .form-group.checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .form-group.checkbox input {
+            width: auto;
+        }
     </style>
 </head>
 <body>
@@ -273,11 +406,83 @@
         </div>
     </div>
 
+    <!-- 编辑用户模态框 -->
+    <div id="editUserModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>编辑用户信息</h3>
+                <span class="close" onclick="closeEditModal()">&times;</span>
+            </div>
+            <form id="editUserForm">
+                <input type="hidden" id="editUserId">
+                <div class="form-group">
+                    <label for="editUsername">用户名</label>
+                    <input type="text" id="editUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="editEmail">邮箱</label>
+                    <input type="email" id="editEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">电话</label>
+                    <input type="text" id="editPhone" name="phone" required>
+                </div>
+                <div class="form-group">
+                    <label for="editOrganization">单位</label>
+                    <input type="text" id="editOrganization" name="organization" required>
+                </div>
+                <div class="form-group">
+                    <label for="editAddress">地址</label>
+                    <input type="text" id="editAddress" name="address">
+                </div>
+                <div class="form-group checkbox">
+                    <input type="checkbox" id="editIsAdmin" name="is_admin">
+                    <label for="editIsAdmin">管理员权限</label>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-secondary" onclick="closeEditModal()">取消</button>
+                    <button type="submit" class="btn-primary">保存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         // 编辑用户
         function editUser(userId) {
-            // 这里可以实现编辑用户的逻辑
-            alert('编辑用户功能开发中');
+            // 获取用户信息
+            fetch(`/api/user-info?user_id=${userId}`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer {{ token }}`,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(userData => {
+                if (userData) {
+                    // 填充表单数据
+                    document.getElementById('editUserId').value = userId;
+                    document.getElementById('editUsername').value = userData.username || '';
+                    document.getElementById('editEmail').value = userData.email || '';
+                    document.getElementById('editPhone').value = userData.phone || '';
+                    document.getElementById('editOrganization').value = userData.organization || '';
+                    document.getElementById('editAddress').value = userData.address || '';
+                    document.getElementById('editIsAdmin').checked = userData.is_admin === 1;
+                    
+                    // 显示模态框
+                    document.getElementById('editUserModal').style.display = 'block';
+                }
+            })
+            .catch(error => {
+                console.error('获取用户信息失败:', error);
+                alert('获取用户信息失败');
+            });
+        }
+        
+        // 关闭编辑模态框
+        function closeEditModal() {
+            document.getElementById('editUserModal').style.display = 'none';
         }
         
         // 重置密码
@@ -366,6 +571,53 @@
                     }
                 }
             });
+        }
+        
+        // 提交编辑表单
+        document.getElementById('editUserForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const userId = document.getElementById('editUserId').value;
+            const userData = {
+                username: document.getElementById('editUsername').value,
+                email: document.getElementById('editEmail').value,
+                phone: document.getElementById('editPhone').value,
+                organization: document.getElementById('editOrganization').value,
+                address: document.getElementById('editAddress').value,
+                is_admin: document.getElementById('editIsAdmin').checked ? 1 : 0
+            };
+            
+            // 提交更新
+            fetch(`/api/admin/users/${userId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer {{ token }}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(userData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message) {
+                    alert(data.message);
+                    // 关闭模态框
+                    closeEditModal();
+                    // 刷新页面
+                    window.location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('更新用户信息失败:', error);
+                alert('更新用户信息失败');
+            });
+        });
+        
+        // 点击模态框外部关闭
+        window.onclick = function(event) {
+            const modal = document.getElementById('editUserModal');
+            if (event.target == modal) {
+                closeEditModal();
+            }
         }
     </script>
 </body>
