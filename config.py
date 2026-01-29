@@ -2,7 +2,7 @@
 DB_CONFIG = {
     'host': 'localhost',
     'user': 'root',
-    'password': 'anchor120.',
+    'password': 'root',
     'database': 'training_system'
 }
 
