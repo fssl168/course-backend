@@ -530,7 +530,7 @@ def get_my_courses():
                         'registered': course[7],
                         'registration_start': course[8],
                         'registration_end': course[9],
-                        'registered_at': course[10] if len(course) > 10 else None
+                        'registered_at': course[11] if len(course) > 11 else None
                     }
                     course_list.append(course_dict)
 
