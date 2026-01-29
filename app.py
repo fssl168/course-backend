@@ -1,11 +1,12 @@
 from flask import Flask, redirect, url_for, render_template, request
 from flask_cors import CORS
-from config import DB_CONFIG, WECHAT_CONFIG, FLASK_CONFIG
+from config import DB_CONFIG, WECHAT_CONFIG, FLASK_CONFIG, ENVIRONMENT
 from db_init import init_db
 
 # 创建Flask应用
 app = Flask(__name__, template_folder='src/views')
-CORS(app)
+# 配置CORS，允许前端地址访问
+CORS(app, resources={"/*": {"origins": "http://localhost:5173"}})
 app.config['SECRET_KEY'] = FLASK_CONFIG['SECRET_KEY']
 app.config['TEMPLATES_AUTO_RELOAD'] = True
 
@@ -51,4 +52,6 @@ def login_page():
 # 管理后台
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    env = os.environ.get('FLASK_ENV', 'development')
+    config = ENVIRONMENT.get(env, ENVIRONMENT['development'])
+    app.run(debug=config['debug'], host=config['host'], port=config['port'])
